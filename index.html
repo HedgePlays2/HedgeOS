@@ -1,590 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HedgeOS</title>
-
 <script src="https://js.puter.com/v2/"></script>
-
-<style>
-
-*{
-    box-sizing:border-box;
-    font-family:Arial, sans-serif;
-}
-
-body{
-    margin:0;
-    overflow:hidden;
-    background:#111;
-}
-
-
-/* DESKTOP */
-
-#desktop{
-    width:100vw;
-    height:100vh;
-    background:
-    linear-gradient(135deg,#111827,#2563eb);
-    position:relative;
-}
-
-
-/* ICONS */
-
-.icon{
-    width:90px;
-    text-align:center;
-    color:white;
-    margin:20px;
-    cursor:pointer;
-}
-
-.icon div{
-    font-size:45px;
-}
-
-
-/* TASKBAR */
-
-#taskbar{
-    position:absolute;
-    bottom:0;
-    left:0;
-    width:100%;
-    height:45px;
-    background:#111827dd;
-    display:flex;
-    align-items:center;
-}
-
-
-#start{
-    background:#2563eb;
-    color:white;
-    padding:10px 20px;
-    cursor:pointer;
-}
-
-
-#clock{
-    margin-left:auto;
-    color:white;
-    margin-right:20px;
-}
-
-
-
-/* START MENU */
-
-#menu{
-
-display:none;
-position:absolute;
-bottom:45px;
-left:0;
-width:250px;
-background:#1f2937;
-color:white;
-padding:20px;
-border-radius:10px;
-
-}
-
-
-
-.menuitem{
-padding:10px;
-cursor:pointer;
-}
-
-.menuitem:hover{
-background:#374151;
-}
-
-
-/* WINDOWS */
-
-.window{
-
-position:absolute;
-background:white;
-width:500px;
-height:350px;
-top:100px;
-left:200px;
-border-radius:12px;
-box-shadow:0 0 20px black;
-overflow:hidden;
-
-}
-
-
-.title{
-
-height:35px;
-background:#2563eb;
-color:white;
-padding:8px;
-cursor:move;
-
-}
-
-
-.content{
-
-padding:15px;
-height:calc(100% - 35px);
-overflow:auto;
-
-}
-
-
-
-button{
-
-padding:8px;
-border:none;
-background:#2563eb;
-color:white;
-border-radius:5px;
-cursor:pointer;
-
-}
-
-
-.file{
-
-padding:8px;
-border-bottom:1px solid #ddd;
-
-}
-
-
-</style>
-
+<link rel="stylesheet" href="styles/desktop.css">
+<link rel="stylesheet" href="styles/windows.css">
+<link rel="stylesheet" href="styles/themes.css">
 </head>
-
-
 <body>
 
-
-<div id="desktop">
-
-
-<div class="icon" onclick="openFiles()">
-<div>📁</div>
-Files
+<div id="boot-screen">
+  <div id="boot-logo">🌿</div>
+  <div id="boot-name">HedgeOS</div>
+  <div id="boot-bar"><div id="boot-fill"></div></div>
+  <div id="boot-status">Starting up...</div>
 </div>
 
-
-<div class="icon" onclick="openAbout()">
-<div>💻</div>
-About
+<div id="lock-screen" style="display:none">
+  <div id="lock-time"></div>
+  <div id="lock-date"></div>
+  <div id="lock-user">🌿 HedgeOS</div>
+  <input id="lock-pin" type="password" placeholder="PIN (press Enter to skip)" maxlength="6">
+  <button id="lock-btn">Unlock</button>
 </div>
 
+<div id="desktop" style="display:none">
+  <div id="wallpaper"></div>
 
+  <div id="desktop-icons"></div>
 
-<div id="menu">
+  <div id="notification-area"></div>
 
-<h2>HedgeOS</h2>
+  <div id="context-menu" style="display:none">
+    <div class="ctx-item" data-action="refresh">🔄 Refresh Desktop</div>
+    <div class="ctx-item" data-action="wallpaper">🖼 Change Wallpaper</div>
+    <div class="ctx-item" data-action="newfile">📄 New Text File</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" data-action="settings">⚙ Settings</div>
+  </div>
 
-<div class="menuitem" onclick="openFiles()">
-📁 File Manager
+  <div id="taskbar">
+    <div id="start-btn">🌿 Hedge</div>
+    <div id="taskbar-windows"></div>
+    <div id="taskbar-tray">
+      <div id="tray-notif" title="Notifications">🔔</div>
+      <div id="tray-wifi" title="Network">📶</div>
+      <div id="clock-display"></div>
+    </div>
+  </div>
+
+  <div id="start-menu" style="display:none">
+    <div id="start-header">
+      <div id="start-user-avatar">🌿</div>
+      <div id="start-user-name">HedgeOS User</div>
+    </div>
+    <input id="start-search" placeholder="Search apps..." autocomplete="off">
+    <div id="start-apps"></div>
+    <div id="start-footer">
+      <div class="start-foot-btn" data-action="settings" title="Settings">⚙</div>
+      <div class="start-foot-btn" data-action="power" title="Power">⏻</div>
+    </div>
+  </div>
+
+  <div id="power-menu" style="display:none">
+    <div class="power-item" data-action="lock">🔒 Lock</div>
+    <div class="power-item" data-action="restart">🔄 Restart</div>
+    <div class="power-item" data-action="shutdown">⏻ Shut Down</div>
+  </div>
+
 </div>
 
-
-<div class="menuitem" onclick="openTerminal()">
-⌨ Terminal
-</div>
-
-
-<div class="menuitem">
-⚙ Settings
-</div>
-
-
-</div>
-
-
-
-<div id="taskbar">
-
-<div id="start" onclick="toggleMenu()">
-🌿 Hedge
-</div>
-
-<div id="clock"></div>
-
-</div>
-
-
-</div>
-
-
-
-
-<script>
-
-
-let windows=[];
-
-
-
-function toggleMenu(){
-
-let m=document.getElementById("menu");
-
-m.style.display=
-m.style.display=="block"
-?"none":"block";
-
-}
-
-
-
-function createWindow(title,html){
-
-
-let win=document.createElement("div");
-
-win.className="window";
-
-
-win.innerHTML=`
-
-<div class="title">
-${title}
-</div>
-
-<div class="content">
-${html}
-</div>
-
-`;
-
-
-
-document.getElementById("desktop")
-.appendChild(win);
-
-
-
-dragWindow(win);
-
-
-windows.push(win);
-
-
-return win;
-
-}
-
-
-
-
-
-function dragWindow(win){
-
-let bar=win.querySelector(".title");
-
-let offsetX,offsetY;
-
-
-bar.onmousedown=e=>{
-
-offsetX=e.clientX-win.offsetLeft;
-offsetY=e.clientY-win.offsetTop;
-
-
-document.onmousemove=e=>{
-
-win.style.left=
-e.clientX-offsetX+"px";
-
-win.style.top=
-e.clientY-offsetY+"px";
-
-};
-
-
-document.onmouseup=()=>{
-
-document.onmousemove=null;
-
-};
-
-};
-
-
-}
-
-
-
-
-
-async function openFiles(){
-
-
-let html=`
-
-<h2>Hedge File Manager</h2>
-
-
-<button onclick="uploadFile()">
-Upload File
-</button>
-
-<br><br>
-
-
-<div id="files">
-Loading files...
-</div>
-
-
-`;
-
-
-let win=createWindow(
-"📁 Files",
-html
-);
-
-
-
-loadFiles(win);
-
-
-}
-
-
-
-
-async function loadFiles(win){
-
-let box=win.querySelector("#files");
-
-
-try{
-
-
-let files=
-await puter.fs.readdir("/");
-
-
-
-box.innerHTML="";
-
-
-files.forEach(file=>{
-
-
-let div=document.createElement("div");
-
-div.className="file";
-
-
-div.innerHTML=
-"📄 "+file.name;
-
-
-div.onclick=()=>{
-
-launchFile(file);
-
-};
-
-
-box.appendChild(div);
-
-
-});
-
-
-}catch(e){
-
-box.innerHTML=
-"Not connected to Puter yet.";
-
-}
-
-
-}
-
-
-
-
-async function uploadFile(){
-
-let file=
-await puter.ui.openFilePicker();
-
-
-await puter.fs.write(
-"/"+file.name,
-file
-);
-
-
-alert("Uploaded!");
-
-}
-
-
-
-
-function launchFile(file){
-
-
-let name=file.name.toLowerCase();
-
-
-if(name.endsWith(".exe")){
-
-
-createWindow(
-"EXE Runner",
-`
-
-<h2>Windows Program</h2>
-
-<p>
-Detected:
-${file.name}
-</p>
-
-<p>
-EXE emulation will be added using WebAssembly Wine/DOSBox.
-</p>
-
-`
-);
-
-
-}
-
-
-
-else if(name.endsWith(".apk")){
-
-
-createWindow(
-"APK Runner",
-
-`
-
-<h2>Android App</h2>
-
-<p>
-Detected:
-${file.name}
-</p>
-
-
-<p>
-Android emulator layer coming soon.
-</p>
-
-`
-
-);
-
-
-
-}
-
-
-
-else{
-
-
-createWindow(
-file.name,
-
-`
-Opened:
-${file.name}
-`
-
-);
-
-
-}
-
-
-}
-
-
-
-
-
-function openAbout(){
-
-createWindow(
-"About HedgeOS",
-
-`
-
-<h1>🌿 HedgeOS</h1>
-
-<p>
-A web-based operating system powered by Puter.js.
-</p>
-
-<p>
-Version 0.1 Prototype
-</p>
-
-`
-
-);
-
-
-}
-
-
-
-
-function openTerminal(){
-
-createWindow(
-
-"Hedge Terminal",
-
-`
-
-<input id="cmd"
-placeholder="Type command..."
-style="width:100%;padding:10px">
-
-
-<p id="output"></p>
-
-
-`
-
-);
-
-
-}
-
-
-
-
-setInterval(()=>{
-
-document.getElementById("clock")
-.innerHTML=
-new Date().toLocaleTimeString();
-
-
-},1000);
-
-
-
-</script>
-
-
+<script src="core/system.js"></script>
+<script src="core/windowManager.js"></script>
+<script src="desktop/desktop.js"></script>
+<script src="desktop/taskbar.js"></script>
+<script src="desktop/startMenu.js"></script>
+<script src="desktop/notifications.js"></script>
+<script src="apps/file-explorer/app.js"></script>
+<script src="apps/terminal/app.js"></script>
+<script src="apps/settings/app.js"></script>
+<script src="apps/browser/app.js"></script>
+<script src="core/boot.js"></script>
 </body>
 </html>
