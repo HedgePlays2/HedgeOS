@@ -1,5 +1,5 @@
 const OSBrowser = (() => {
-  const PROXY_BASE = 'https://hedgeos.detlaffcameron.workers.dev/?url=';
+  const PROXY_BASE = 'https://scramjet.mercurywork.shop/';
 
   const BOOKMARKS = [
     { label: '🎮 Games', url: 'https://platypuscodes.github.io/games/' },
