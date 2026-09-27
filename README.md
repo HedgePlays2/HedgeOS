@@ -1,2 +1,2 @@
-# HedgeOS 3.0  
+# HedgeOS
 A lightweight web‑based operating system built with Puter.js.
