@@ -177,3 +177,6 @@ const PlayStore = (() => {
 
   return { open, syncInstalledApps };
 })();
+
+// Restore installed app shortcuts whenever HedgeOS starts.
+PlayStore.syncInstalledApps();
