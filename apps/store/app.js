@@ -31,7 +31,7 @@ const PlayStore = (() => {
   }
 
   function launchApp(app) {
-    window.open(app.url, '_blank', 'noopener,noreferrer');
+    OSBrowser.open(app.url, app.name);
   }
 
   function syncInstalledApps() {
