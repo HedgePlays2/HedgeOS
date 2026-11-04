@@ -3,132 +3,190 @@ const WindowManager = (() => {
   const wins = new Map();
   let focusedId = null;
 
-  function nextZ() { return ++zCounter; }
+  const TASKBAR_HEIGHT = 48;
+  const MIN_WIDTH = 320;
+  const MIN_HEIGHT = 240;
 
-  function focus(id) {
-    if (focusedId === id) return;
-    if (focusedId) {
-      const prev = wins.get(focusedId);
-      if (prev) prev.el.classList.remove('focused');
-    }
-    focusedId = id;
-    const w = wins.get(id);
-    if (!w) return;
-    w.el.classList.add('focused');
-    w.el.style.zIndex = nextZ();
-    document.querySelectorAll('.taskbar-btn').forEach(b => b.classList.remove('active'));
-    const tb = document.querySelector(`.taskbar-btn[data-id="${id}"]`);
-    if (tb) tb.classList.add('active');
+  function nextZ() {
+    return ++zCounter;
   }
 
-  function create({ title = 'Window', icon = '', html = '', width = 600, height = 420, x, y } = {}) {
-    const id = 'win-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-    const desktop = document.getElementById('desktop');
+  function getTaskbarButton(id) {
+    return [...document.querySelectorAll('.taskbar-btn')].find(button => button.dataset.id === id);
+  }
 
-    const el = document.createElement('div');
+  function focus(id) {
+    const win = wins.get(id);
+    if (!win || win.minimized) return;
+
+    if (focusedId && focusedId !== id) {
+      const previous = wins.get(focusedId);
+      if (previous) previous.el.classList.remove('focused');
+    }
+
+    focusedId = id;
+    win.el.classList.add('focused');
+    win.el.style.zIndex = nextZ();
+
+    document.querySelectorAll('.taskbar-btn').forEach(button => {
+      button.classList.toggle('active', button.dataset.id === id);
+    });
+  }
+
+  function create({
+    title = 'Window',
+    icon = '',
+    html = '',
+    width = 600,
+    height = 420,
+    x,
+    y
+  } = {}) {
+    const desktop = document.getElementById('desktop');
+    if (!desktop) throw new Error('HedgeOS desktop is not ready.');
+
+    const id = 'win-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    const maxWidth = Math.max(MIN_WIDTH, window.innerWidth - 24);
+    const maxHeight = Math.max(MIN_HEIGHT, window.innerHeight - TASKBAR_HEIGHT - 16);
+    width = Math.min(Math.max(MIN_WIDTH, width), maxWidth);
+    height = Math.min(Math.max(MIN_HEIGHT, height), maxHeight);
+
+    const el = document.createElement('section');
     el.className = 'os-window';
     el.dataset.id = id;
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-label', title);
     el.style.width = width + 'px';
     el.style.height = height + 'px';
 
-    const startX = x !== undefined ? x : Math.max(40, Math.random() * (innerWidth - width - 80) + 40);
-    const startY = y !== undefined ? y : Math.max(40, Math.random() * (innerHeight - height - 100) + 40);
-    el.style.left = startX + 'px';
-    el.style.top = startY + 'px';
+    const startX = x !== undefined ? x : Math.max(12, (window.innerWidth - width) / 2 + (wins.size % 6) * 24);
+    const startY = y !== undefined ? y : Math.max(12, (window.innerHeight - TASKBAR_HEIGHT - height) / 2 + (wins.size % 6) * 20);
+    el.style.left = Math.min(Math.max(0, startX), Math.max(0, window.innerWidth - width)) + 'px';
+    el.style.top = Math.min(Math.max(0, startY), Math.max(0, window.innerHeight - TASKBAR_HEIGHT - height)) + 'px';
     el.style.zIndex = nextZ();
 
+    // App markup is supplied by HedgeOS's own app modules.
     el.innerHTML = `
       <div class="win-titlebar">
         <span class="win-icon">${icon}</span>
-        <span class="win-title">${title}</span>
+        <span class="win-title"></span>
         <div class="win-controls">
-          <button class="win-btn win-close" title="Close">✕</button>
-          <button class="win-btn win-min" title="Minimize">−</button>
-          <button class="win-btn win-max" title="Maximize">⊞</button>
+          <button class="win-btn win-min" type="button" title="Minimize" aria-label="Minimize">−</button>
+          <button class="win-btn win-max" type="button" title="Maximize" aria-label="Maximize">□</button>
+          <button class="win-btn win-close" type="button" title="Close" aria-label="Close">×</button>
         </div>
       </div>
-      <div class="win-content">${html}</div>
-      <div class="win-resize"></div>`;
+      <div class="win-content"></div>
+      <div class="win-resize" title="Resize window"></div>`;
 
+    el.querySelector('.win-title').textContent = title;
+    el.querySelector('.win-content').innerHTML = html;
     desktop.appendChild(el);
 
-    const state = { id, el, title, icon, minimized: false, maximized: false, prevRect: null };
+    const state = {
+      id,
+      el,
+      title,
+      icon,
+      minimized: false,
+      maximized: false,
+      prevRect: null
+    };
     wins.set(id, state);
 
-    el.addEventListener('mousedown', () => focus(id));
-
+    el.addEventListener('pointerdown', () => focus(id));
     el.querySelector('.win-close').addEventListener('click', () => close(id));
     el.querySelector('.win-min').addEventListener('click', () => minimize(id));
     el.querySelector('.win-max').addEventListener('click', () => maximize(id));
 
     makeDraggable(el, el.querySelector('.win-titlebar'), state);
     makeResizable(el, el.querySelector('.win-resize'), state);
-
-    addTaskbarBtn(state);
+    addTaskbarButton(state);
     focus(id);
 
     return { id, el, content: el.querySelector('.win-content') };
   }
 
   function close(id) {
-    const w = wins.get(id);
-    if (!w) return;
-    w.el.remove();
+    const win = wins.get(id);
+    if (!win) return;
+
+    win.el.remove();
     wins.delete(id);
-    const tb = document.querySelector(`.taskbar-btn[data-id="${id}"]`);
-    if (tb) tb.remove();
+    getTaskbarButton(id)?.remove();
+
     if (focusedId === id) {
       focusedId = null;
-      const remaining = [...wins.keys()];
-      if (remaining.length) focus(remaining[remaining.length - 1]);
+      const next = [...wins.values()].filter(item => !item.minimized).pop();
+      if (next) focus(next.id);
     }
   }
 
   function minimize(id) {
-    const w = wins.get(id);
-    if (!w) return;
-    w.minimized = !w.minimized;
-    w.el.classList.toggle('minimized', w.minimized);
-    const tb = document.querySelector(`.taskbar-btn[data-id="${id}"]`);
-    if (tb) tb.classList.toggle('active', !w.minimized);
-    if (w.minimized && focusedId === id) {
+    const win = wins.get(id);
+    if (!win) return;
+
+    win.minimized = !win.minimized;
+    win.el.classList.toggle('minimized', win.minimized);
+    const button = getTaskbarButton(id);
+    if (button) button.classList.toggle('minimized', win.minimized);
+
+    if (win.minimized && focusedId === id) {
+      win.el.classList.remove('focused');
       focusedId = null;
-      const vis = [...wins.values()].filter(v => !v.minimized);
-      if (vis.length) focus(vis[vis.length - 1].id);
+      const next = [...wins.values()].filter(item => !item.minimized).pop();
+      if (next) focus(next.id);
+    } else if (!win.minimized) {
+      focus(id);
     }
   }
 
   function maximize(id) {
-    const w = wins.get(id);
-    if (!w) return;
-    if (!w.maximized) {
-      w.prevRect = { left: w.el.style.left, top: w.el.style.top, width: w.el.style.width, height: w.el.style.height };
-      w.maximized = true;
-      w.el.classList.add('maximized');
+    const win = wins.get(id);
+    if (!win) return;
+
+    if (!win.maximized) {
+      win.prevRect = {
+        left: win.el.style.left,
+        top: win.el.style.top,
+        width: win.el.style.width,
+        height: win.el.style.height
+      };
+      win.maximized = true;
+      win.el.classList.add('maximized');
+      win.el.querySelector('.win-max').textContent = '❐';
+      win.el.querySelector('.win-max').title = 'Restore';
     } else {
-      w.maximized = false;
-      w.el.classList.remove('maximized');
-      if (w.prevRect) {
-        w.el.style.left = w.prevRect.left;
-        w.el.style.top = w.prevRect.top;
-        w.el.style.width = w.prevRect.width;
-        w.el.style.height = w.prevRect.height;
-      }
+      win.maximized = false;
+      win.el.classList.remove('maximized');
+      if (win.prevRect) Object.assign(win.el.style, win.prevRect);
+      win.el.querySelector('.win-max').textContent = '□';
+      win.el.querySelector('.win-max').title = 'Maximize';
+      keepOnScreen(win);
     }
+    focus(id);
   }
 
-  function addTaskbarBtn(state) {
+  function addTaskbarButton(state) {
     const bar = document.getElementById('taskbar-windows');
-    const btn = document.createElement('div');
-    btn.className = 'taskbar-btn';
-    btn.dataset.id = state.id;
-    btn.textContent = (state.icon ? state.icon + ' ' : '') + state.title;
-    btn.title = state.title;
-    btn.addEventListener('click', () => {
-      const w = wins.get(state.id);
-      if (!w) return;
-      if (w.minimized) {
-        minimize(state.id);
+    if (!bar) return;
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'taskbar-btn';
+    button.dataset.id = state.id;
+    button.textContent = (state.icon ? state.icon + ' ' : '') + state.title;
+    button.title = state.title;
+    button.setAttribute('aria-label', 'Switch to ' + state.title);
+
+    button.addEventListener('click', () => {
+      const win = wins.get(state.id);
+      if (!win) return;
+
+      if (win.minimized) {
+        win.minimized = false;
+        win.el.classList.remove('minimized');
+        button.classList.remove('minimized');
         focus(state.id);
       } else if (focusedId === state.id) {
         minimize(state.id);
@@ -136,53 +194,95 @@ const WindowManager = (() => {
         focus(state.id);
       }
     });
-    bar.appendChild(btn);
+
+    bar.appendChild(button);
+  }
+
+  function keepOnScreen(win) {
+    const maxLeft = Math.max(0, window.innerWidth - win.el.offsetWidth);
+    const maxTop = Math.max(0, window.innerHeight - TASKBAR_HEIGHT - win.el.offsetHeight);
+    win.el.style.left = Math.min(Math.max(0, win.el.offsetLeft), maxLeft) + 'px';
+    win.el.style.top = Math.min(Math.max(0, win.el.offsetTop), maxTop) + 'px';
   }
 
   function makeDraggable(el, handle, state) {
-    let ox = 0, oy = 0, dragging = false;
-    handle.addEventListener('mousedown', e => {
-      if (e.target.classList.contains('win-btn')) return;
-      if (state.maximized) return;
-      dragging = true;
-      ox = e.clientX - el.offsetLeft;
-      oy = e.clientY - el.offsetTop;
-      e.preventDefault();
+    let pointerId = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    handle.addEventListener('pointerdown', event => {
+      if (event.target.closest('.win-btn') || state.maximized) return;
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+      pointerId = event.pointerId;
+      offsetX = event.clientX - el.offsetLeft;
+      offsetY = event.clientY - el.offsetTop;
+      handle.setPointerCapture(pointerId);
+      focus(state.id);
+      event.preventDefault();
     });
-    document.addEventListener('mousemove', e => {
-      if (!dragging) return;
-      let nx = e.clientX - ox;
-      let ny = e.clientY - oy;
-      nx = Math.max(0, Math.min(innerWidth - el.offsetWidth, nx));
-      ny = Math.max(0, Math.min(innerHeight - 48 - el.offsetHeight, ny));
-      el.style.left = nx + 'px';
-      el.style.top = ny + 'px';
+
+    handle.addEventListener('pointermove', event => {
+      if (pointerId !== event.pointerId || state.maximized) return;
+      const maxLeft = Math.max(0, window.innerWidth - el.offsetWidth);
+      const maxTop = Math.max(0, window.innerHeight - TASKBAR_HEIGHT - el.offsetHeight);
+      el.style.left = Math.min(Math.max(0, event.clientX - offsetX), maxLeft) + 'px';
+      el.style.top = Math.min(Math.max(0, event.clientY - offsetY), maxTop) + 'px';
     });
-    document.addEventListener('mouseup', () => { dragging = false; });
-    handle.addEventListener('dblclick', () => maximize(state.id));
+
+    const stopDragging = event => {
+      if (pointerId !== event.pointerId) return;
+      pointerId = null;
+    };
+    handle.addEventListener('pointerup', stopDragging);
+    handle.addEventListener('pointercancel', stopDragging);
+    handle.addEventListener('dblclick', event => {
+      if (!event.target.closest('.win-btn')) maximize(state.id);
+    });
   }
 
   function makeResizable(el, handle, state) {
-    let resizing = false, sx = 0, sy = 0, sw = 0, sh = 0;
-    handle.addEventListener('mousedown', e => {
-      if (state.maximized) return;
-      resizing = true;
-      sx = e.clientX;
-      sy = e.clientY;
-      sw = el.offsetWidth;
-      sh = el.offsetHeight;
-      e.preventDefault();
-      e.stopPropagation();
+    let pointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let startWidth = 0;
+    let startHeight = 0;
+
+    handle.addEventListener('pointerdown', event => {
+      if (state.maximized || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      pointerId = event.pointerId;
+      startX = event.clientX;
+      startY = event.clientY;
+      startWidth = el.offsetWidth;
+      startHeight = el.offsetHeight;
+      handle.setPointerCapture(pointerId);
+      focus(state.id);
+      event.preventDefault();
+      event.stopPropagation();
     });
-    document.addEventListener('mousemove', e => {
-      if (!resizing) return;
-      const nw = Math.max(320, sw + e.clientX - sx);
-      const nh = Math.max(240, sh + e.clientY - sy);
-      el.style.width = nw + 'px';
-      el.style.height = nh + 'px';
+
+    handle.addEventListener('pointermove', event => {
+      if (pointerId !== event.pointerId || state.maximized) return;
+      const maxWidth = Math.max(MIN_WIDTH, window.innerWidth - el.offsetLeft);
+      const maxHeight = Math.max(MIN_HEIGHT, window.innerHeight - TASKBAR_HEIGHT - el.offsetTop);
+      el.style.width = Math.min(Math.max(MIN_WIDTH, startWidth + event.clientX - startX), maxWidth) + 'px';
+      el.style.height = Math.min(Math.max(MIN_HEIGHT, startHeight + event.clientY - startY), maxHeight) + 'px';
     });
-    document.addEventListener('mouseup', () => { resizing = false; });
+
+    const stopResizing = event => {
+      if (pointerId !== event.pointerId) return;
+      pointerId = null;
+    };
+    handle.addEventListener('pointerup', stopResizing);
+    handle.addEventListener('pointercancel', stopResizing);
   }
+
+  window.addEventListener('resize', () => {
+    wins.forEach(win => {
+      if (win.maximized) return;
+      keepOnScreen(win);
+    });
+  });
 
   return { create, close, minimize, maximize, focus, wins };
 })();
