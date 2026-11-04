@@ -5,8 +5,7 @@ const PlayStore = (() => {
     { id: 'hedge-arcade', name: 'Hedge Web Arcade', icon: '🎮', category: 'Games', description: 'A collection of browser games, including Sonic adventures.', url: 'https://hedgeplays2.github.io/' },
     { id: 'scratch', name: 'Scratch', icon: '🐱', category: 'Apps', description: 'Create games, animations and interactive stories.', url: 'https://scratch.mit.edu/' },
     { id: 'itch-io', name: 'itch.io', icon: '🕹️', category: 'Games', description: 'Discover indie games you can play in your browser.', url: 'https://itch.io/games/html5' },
-    { id: 'crazygames', name: 'CrazyGames', icon: '🎯', category: 'Games', description: 'A huge library of instant-play browser games.', url: 'https://www.crazygames.com/' },
-    { id: 'poki', name: 'Poki', icon: '🟠', category: 'Games', description: 'Quick games that run right in your browser.', url: 'https://poki.com/' },
+    { id: 'steam', name: 'Steam Store', icon: '🎮', category: 'Games', description: 'Browse PC games on Valve’s official Steam store website.', url: 'https://store.steampowered.com/' },
     { id: 'google-docs', name: 'Google Docs', icon: '📄', category: 'Apps', description: 'Write and edit documents online.', url: 'https://docs.google.com/' },
     { id: 'google-drive', name: 'Google Drive', icon: '📁', category: 'Apps', description: 'Store and organize files in the cloud.', url: 'https://drive.google.com/' },
     { id: 'youtube', name: 'YouTube', icon: '▶️', category: 'Apps', description: 'Watch videos, music and creators.', url: 'https://www.youtube.com/' },
@@ -75,7 +74,7 @@ const PlayStore = (() => {
           <div style="color:#64748b;">Loading the store...</div>
         </main>
         <footer style="padding:8px 16px;background:white;border-top:1px solid #dce3ed;color:#64748b;font-size:11px;flex:0 0 auto;">
-          Installing adds a shortcut to HedgeOS. These are web apps and games, so they open in a browser tab.
+          Installing adds a shortcut to HedgeOS. These are third-party web services and open in a browser tab. HedgeOS is independent and not affiliated with them.
         </footer>
       </div>
       <style>
