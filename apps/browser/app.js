@@ -1,68 +1,43 @@
 const OSBrowser = (() => {
-  const PROXY_BASE = 'https://hedgeos.detlaffcameron.workers.dev/?url=';
+  const SCRAMJET_HOME = 'https://scramjet.mercurywork.shop/';
 
-  const BOOKMARKS = [
-    { label: '🎮 Games', url: 'https://platypuscodes.github.io/games/' },
-    { label: '🔍 Google', url: 'https://www.google.com/webhp?igu=1' },
-    { label: '📺 YouTube', url: 'https://www.youtube.com' },
-    { label: '📰 Reddit', url: 'https://old.reddit.com' },
-  ];
-
-  const HOME = BOOKMARKS[0].url;
-
-  function proxyUrl(url) {
-    if (!url || url === 'about:blank') return url;
-    return PROXY_BASE + encodeURIComponent(url);
-  }
-
-  function open(url = HOME) {
-    const bookmarkHtml = BOOKMARKS.map(b =>
-      `<button class="browser-bm" data-url="${b.url}">${b.label}</button>`
-    ).join('');
-
+  function open() {
     const html = `
-      <div class="browser-container">
-        <div class="browser-bar">
-          <button class="browser-nav-btn" id="br-back" title="Back">◀</button>
-          <button class="browser-nav-btn" id="br-fwd" title="Forward">▶</button>
-          <button class="browser-nav-btn" id="br-reload" title="Reload">🔄</button>
-          <button class="browser-nav-btn" id="br-home" title="Home">🏠</button>
-          <input class="browser-url" id="br-url" value="${url}" placeholder="Search or enter URL...">
-          <button class="browser-nav-btn" id="br-go" title="Go">→</button>
+      <div class="hedge-scramjet-shell" style="height:100%;min-height:0;display:flex;flex-direction:column;background:#111827;color:#fff;overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#1f2937;border-bottom:1px solid #374151;flex:0 0 auto;">
+          <span style="font-size:18px;">🌐</span>
+          <strong style="font-size:13px;letter-spacing:.3px;">HedgeOS Browser</strong>
+          <span style="font-size:11px;color:#9ca3af;">Powered by Scramjet</span>
+          <span style="flex:1;"></span>
+          <button id="br-reload" title="Reload Scramjet" style="border:0;border-radius:6px;padding:6px 10px;background:#374151;color:white;cursor:pointer;">↻</button>
+          <button id="br-open" style="border:0;border-radius:6px;padding:6px 10px;background:#2563eb;color:white;cursor:pointer;">Open separately ↗</button>
         </div>
-        <div class="browser-bookmarks">${bookmarkHtml}</div>
-        <iframe class="browser-frame" id="br-frame"
-          src="${proxyUrl(url)}"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox">
-        </iframe>
+        <div style="flex:1;min-height:0;position:relative;background:#fff;">
+          <iframe id="br-frame" title="Scramjet Browser" src="${SCRAMJET_HOME}" style="display:block;width:100%;height:100%;border:0;background:white;"></iframe>
+        </div>
+        <div style="padding:5px 10px;background:#1f2937;color:#9ca3af;font-size:10px;flex:0 0 auto;">
+          Scramjet is hosted externally. Website availability depends on that service.
+        </div>
       </div>`;
 
-    const w = WindowManager.create({ title: 'Browser', icon: '🌐', html, width: 900, height: 600 });
+    const w = WindowManager.create({
+      title: 'HedgeOS Browser — Scramjet',
+      icon: '🌐',
+      html,
+      width: 1000,
+      height: 680
+    });
+
     const root = w.content;
     const frame = root.querySelector('#br-frame');
-    const urlInput = root.querySelector('#br-url');
 
-    function navigate(to) {
-      let u = to.trim();
-      if (!u) return;
-      if (!/^https?:\/\//i.test(u) && !u.startsWith('//')) {
-        if (u.includes('.') && !u.includes(' ')) u = 'https://' + u;
-        else u = 'https://www.google.com/search?q=' + encodeURIComponent(u);
-      }
-      urlInput.value = u;
-      frame.src = proxyUrl(u);
-    }
+    root.querySelector('#br-reload').onclick = () => {
+      frame.src = SCRAMJET_HOME;
+    };
 
-    root.querySelector('#br-go').onclick = () => navigate(urlInput.value);
-    urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(urlInput.value); });
-    root.querySelector('#br-back').onclick = () => { try { frame.contentWindow.history.back(); } catch {} };
-    root.querySelector('#br-fwd').onclick = () => { try { frame.contentWindow.history.forward(); } catch {} };
-    root.querySelector('#br-reload').onclick = () => { frame.src = proxyUrl(urlInput.value); };
-    root.querySelector('#br-home').onclick = () => navigate(HOME);
-
-    root.querySelectorAll('.browser-bm').forEach(btn => {
-      btn.addEventListener('click', () => navigate(btn.dataset.url));
-    });
+    root.querySelector('#br-open').onclick = () => {
+      window.open(SCRAMJET_HOME, '_blank', 'noopener,noreferrer');
+    };
 
     return w;
   }
