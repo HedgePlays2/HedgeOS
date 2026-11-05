@@ -39,6 +39,7 @@ const HedgeOS = {
   saveSettings() {
     localStorage.setItem('hedgeos-settings', JSON.stringify(this.settings));
     this.applySettings();
+    if (typeof Accounts !== 'undefined') Accounts.saveSettings();
   },
 
   applySettings() {
