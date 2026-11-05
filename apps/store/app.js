@@ -74,7 +74,7 @@ const PlayStore = (() => {
           <div style="color:#64748b;">Loading the store...</div>
         </main>
         <footer style="padding:8px 16px;background:white;border-top:1px solid #dce3ed;color:#64748b;font-size:11px;flex:0 0 auto;">
-          Installing adds a shortcut to HedgeOS. These are third-party web services and open in a browser tab. HedgeOS is independent and not affiliated with them.
+          Installing adds a shortcut to HedgeOS. Apps launch inside HedgeOS Browser through Scramjet. Third-party services are not affiliated with HedgeOS.
         </footer>
       </div>
       <style>
