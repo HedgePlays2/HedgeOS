@@ -124,19 +124,34 @@ const Settings = (() => {
   }
 
   function buildAccount() {
+    const user = typeof Accounts !== 'undefined' ? Accounts.getUser() : null;
     return `
       <div class="settings-section" id="section-account">
-        <h2>Account</h2>
+        <h2>HedgeOS Account</h2>
+        <p style="color:var(--text-dim);font-size:13px;line-height:1.5">
+          Sign in with a Puter account to use HedgeOS on other devices. Your HedgeOS settings will sync through your private cloud storage.
+        </p>
         <div class="settings-row">
-          <div><label>Display Name</label><br><small>Your name on the lock screen and start menu</small></div>
+          <div><label>Account status</label><br><small id="hedge-account-status">${user ? 'Signed in as ' + user.username : 'Not signed in'}</small></div>
+          <span id="hedge-account-avatar" style="font-size:26px">${user ? '✅' : '👤'}</span>
+        </div>
+        <div class="settings-row">
+          <div><label>Display Name</label><br><small>Your name in HedgeOS</small></div>
           <input type="text" id="settings-username" value="${HedgeOS.settings.userName}"
             style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:6px;
               padding:6px 10px;color:var(--text);font-size:13px;outline:none;width:160px">
         </div>
         <div class="settings-row">
-          <div><label>Puter Account</label><br><small>Cloud file storage and sync</small></div>
-          <div id="puter-status-row"></div>
+          <div><label>Cloud Sync</label><br><small>Syncs your theme, wallpaper, and preferences</small></div>
+          <span id="hedge-cloud-status" style="font-size:12px;color:var(--text-dim)">${user ? '☁ Connected' : 'Sign in to enable'}</span>
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px">
+          <button class="btn" id="hedge-account-signin">${user ? 'Switch Account' : 'Create Account / Sign In'}</button>
+          ${user ? '<button class="btn danger" id="hedge-account-signout">Sign Out</button>' : ''}
+        </div>
+        <p style="color:var(--text-dim);font-size:11px;margin-top:14px">
+          New here? Choose “Create Account / Sign In” and follow the Puter sign-up screen. HedgeOS never stores your password.
+        </p>
       </div>`;
   }
 
@@ -217,34 +232,47 @@ const Settings = (() => {
   }
 
   function initAccount(root) {
-    const row = root.querySelector('#puter-status-row');
-    if (!row) return;
-    if (HedgeOS.puterReady) {
-      puter.auth.getUser().then(user => {
-        row.innerHTML = `<span style="color:var(--text);font-size:13px">✅ ${user.username || 'Signed in'}</span>
-          <button class="btn danger" style="margin-left:8px;padding:4px 10px;font-size:12px" id="puter-signout">Sign Out</button>`;
-        root.querySelector('#puter-signout')?.addEventListener('click', async () => {
-          await puter.auth.signOut();
-          HedgeOS.puterReady = false;
-          Notifications.show('Account', 'Signed out of Puter.', '👤');
-        });
-      }).catch(() => {
-        row.innerHTML = `<button class="btn" id="puter-signin">Sign in to Puter</button>`;
-        root.querySelector('#puter-signin')?.addEventListener('click', async () => {
-          await puter.auth.signIn();
-          HedgeOS.puterReady = true;
-          Notifications.show('Account', 'Signed in to Puter!', '✅');
-        });
-      });
-    } else {
-      row.innerHTML = `<button class="btn" id="puter-signin">Sign in to Puter</button>`;
-      root.querySelector('#puter-signin')?.addEventListener('click', async () => {
-        try {
-          await puter.auth.signIn();
-          HedgeOS.puterReady = true;
-          Notifications.show('Account', 'Signed in to Puter!', '✅');
-          row.innerHTML = `<span style="color:var(--text);font-size:13px">✅ Signed in</span>`;
-        } catch (e) { Notifications.show('Error', e.message, '❌'); }
+    const signInButton = root.querySelector('#hedge-account-signin');
+    const signOutButton = root.querySelector('#hedge-account-signout');
+    const status = root.querySelector('#hedge-account-status');
+    const cloudStatus = root.querySelector('#hedge-cloud-status');
+
+    signInButton?.addEventListener('click', async () => {
+      const switching = !!Accounts.getUser();
+      signInButton.disabled = true;
+      signInButton.textContent = 'Connecting...';
+      try {
+        const user = await Accounts.signIn(switching);
+        status.textContent = 'Signed in as ' + (user.username || 'Puter user');
+        cloudStatus.textContent = '☁ Connected';
+        Notifications.show('HedgeOS Account', 'Welcome, ' + (user.username || 'there') + '!', '✅');
+        open('account');
+      } catch (error) {
+        Notifications.show('Sign-in failed', error.message || 'Could not sign in.', '❌');
+        signInButton.disabled = false;
+        signInButton.textContent = switching ? 'Switch Account' : 'Create Account / Sign In';
+      }
+    });
+
+    signOutButton?.addEventListener('click', async () => {
+      try {
+        await Accounts.signOut();
+        Notifications.show('HedgeOS Account', 'You have signed out.', '👋');
+        open('account');
+      } catch (error) {
+        Notifications.show('Sign-out failed', error.message || 'Could not sign out.', '❌');
+      }
+    });
+
+    const nameInput = root.querySelector('#settings-username');
+    if (nameInput) {
+      let debounce;
+      nameInput.addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+          HedgeOS.settings.userName = nameInput.value.trim() || 'HedgeOS User';
+          HedgeOS.saveSettings();
+        }, 400);
       });
     }
   }
