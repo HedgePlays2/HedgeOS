@@ -1,5 +1,10 @@
 window.addEventListener('DOMContentLoaded', async () => {
   HedgeOS.loadSettings();
+  try {
+    if (typeof Accounts !== 'undefined') await Accounts.refresh();
+  } catch (error) {
+    console.warn('HedgeOS account check failed:', error);
+  }
 
   const fill = document.getElementById('boot-fill');
   const status = document.getElementById('boot-status');
