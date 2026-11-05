@@ -15,6 +15,7 @@ const HedgeOS = {
     { id: 'terminal', name: 'Terminal',      icon: '⌨',  launch: () => Terminal.open() },
     { id: 'browser',  name: 'Browser',       icon: '🌐', launch: () => OSBrowser.open() },
     { id: 'store',    name: 'Play Store',     icon: '🛍️', launch: () => PlayStore.open() },
+    { id: 'installer', name: 'App Installer', icon: '📦', launch: () => AppInstaller.open() },
     { id: 'settings', name: 'Settings',      icon: '⚙',  launch: () => Settings.open() },
     { id: 'about',    name: 'About HedgeOS', icon: '💻', launch: () => HedgeOS.openAbout() },
   ],
