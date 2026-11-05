@@ -43,7 +43,6 @@ const Settings = (() => {
     initToggles(root);
     initThemePicker(root);
     initWallpaperPicker(root);
-    initNameInput(root);
     initAccount(root);
 
     return w;
