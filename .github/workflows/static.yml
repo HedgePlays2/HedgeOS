@@ -31,6 +31,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Download Scramjet STATIC engine assets
+        run: |
+          mkdir -p /tmp/scramjet-static
+          curl -fsSL https://github.com/hahahah67-pixel/scramjet-static/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1 -C /tmp/scramjet-static
+          mkdir -p scramjet-static
+          cp -R /tmp/scramjet-static/bare-mux /tmp/scramjet-static/scramjet-engine /tmp/scramjet-static/transport scramjet-static/
+          cp /tmp/scramjet-static/sw.js /tmp/scramjet-static/LICENSE scramjet-static/
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
