@@ -25,12 +25,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     await delay(280 + Math.random() * 180);
   }
 
-  if (typeof puter !== 'undefined') {
-    try {
-      HedgeOS.puterReady = true;
-    } catch {}
-  }
-
   await delay(400);
 
   bootEl.style.opacity = '0';
