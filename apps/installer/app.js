@@ -66,6 +66,55 @@ const AppInstaller = (() => {
     if (!cloudAvailable()) throw new Error('Sign in to your HedgeOS account first. Open Settings → Account.');
     await puter.fs.write(CLOUD_DIR + '/' + safeFilename(record.name), record.blob, { createMissingParents: true });
   }
+  async function restoreCloudBackups(root) {
+    if (!cloudAvailable() || typeof puter.fs.readdir !== 'function' || typeof puter.fs.read !== 'function') {
+      setStatus(root, 'Sign in to your HedgeOS account first. Open Settings → Account.', true);
+      return;
+    }
+    const area = root.querySelector('#installer-cloud');
+    area.textContent = 'Checking your cloud drive…';
+    try {
+      const entries = await puter.fs.readdir(CLOUD_DIR);
+      const files = (entries || []).filter(item => item && item.name && item.path && !item.is_dir && !item.isDirectory);
+      area.innerHTML = '';
+      if (!files.length) {
+        area.textContent = 'No cloud backups found yet.';
+        return;
+      }
+      files.forEach(item => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;background:white;border:1px solid #e1e7ef;border-radius:8px;padding:9px;margin-bottom:6px';
+        const label = document.createElement('span');
+        label.style.cssText = 'font-size:11px;overflow-wrap:anywhere;min-width:0;flex:1';
+        label.textContent = item.name;
+        const button = document.createElement('button');
+        button.type = 'button'; button.textContent = 'Restore to device';
+        button.style.cssText = 'border:0;border-radius:6px;padding:7px 9px;background:#2563eb;color:white;font-size:10px;font-weight:700';
+        button.addEventListener('click', async () => {
+          button.disabled = true; button.textContent = 'Restoring…';
+          try {
+            const blob = await puter.fs.read(item.path);
+            const name = item.name;
+            const ext = name.split('.').pop().toLowerCase();
+            const kind = ext === 'zip' ? 'save' : ext === 'apk' ? 'apk' : 'exe';
+            const file = new File([blob], name, { type: blob.type || 'application/octet-stream', lastModified: Date.now() });
+            await storeFile(file, kind);
+            await renderStoredFiles(root);
+            button.textContent = 'Restored ✓';
+            setStatus(root, name + ' restored to this device.');
+          } catch (error) {
+            button.disabled = false; button.textContent = 'Restore to device';
+            setStatus(root, error.message || 'Could not restore cloud backup.', true);
+          }
+        });
+        row.append(label, button);
+        area.appendChild(row);
+      });
+    } catch (error) {
+      area.textContent = 'Could not read cloud backups. Sign in and try again.';
+      setStatus(root, error.message || 'Cloud drive unavailable.', true);
+    }
+  }
   async function downloadRecord(record) {
     const url = URL.createObjectURL(record.blob);
     const link = document.createElement('a');
@@ -203,6 +252,7 @@ const AppInstaller = (() => {
       '<label id="installer-drop" for="installer-file" style="display:block;border:2px dashed #9bb4d5;border-radius:14px;background:#fff;padding:24px 16px;text-align:center;cursor:pointer"><div style="font-size:34px">⬆️</div><div style="font-weight:800;margin:8px 0 4px">Choose an EXE, APK or ZIP backup</div><div style="font-size:12px;color:#64748b">or drag a file into this area</div><input id="installer-file" type="file" accept=".exe,.apk,.zip,application/zip,application/vnd.android.package-archive,application/x-msdownload" style="display:none"></label>' +
       '<section id="installer-result" style="margin-top:12px"></section><div id="installer-status" role="status" style="font-size:11px;min-height:18px;margin:8px 0;color:#166534"></div>' +
       '<h3 style="font-size:14px;margin:18px 0 9px">Saved files on this device</h3><div id="installer-files"></div>' +
+      '<div style="margin-top:10px"><button id="installer-cloud-refresh" type="button" style="border:0;border-radius:7px;padding:8px 11px;background:#2563eb;color:white;font-size:11px;font-weight:700">Browse cloud backups</button></div><div id="installer-cloud" style="margin-top:8px"></div>' +
       '<h3 style="font-size:13px;margin:20px 0 8px">Recent import history</h3><div id="installer-history"></div>' +
       '<div style="font-size:11px;color:#64748b;margin-top:16px;line-height:1.5">Local files stay in this browser profile. Cloud backups use your own Puter account and its storage quota. Deleting a local copy does not delete its cloud backup.</div></div>';
     const w = WindowManager.create({ title:'App Installer', icon:'📦', html:html, width:700, height:650 });
@@ -213,6 +263,7 @@ const AppInstaller = (() => {
     drop.addEventListener('dragover', event => { event.preventDefault(); drop.style.background = '#eaf2ff'; });
     drop.addEventListener('dragleave', () => { drop.style.background = '#fff'; });
     drop.addEventListener('drop', event => { event.preventDefault(); drop.style.background = '#fff'; const file = event.dataTransfer.files && event.dataTransfer.files[0]; if (file) inspect(file, root); });
+    root.querySelector('#installer-cloud-refresh').addEventListener('click', () => restoreCloudBackups(root));
     renderHistory(root);
     renderStoredFiles(root);
     return w;
