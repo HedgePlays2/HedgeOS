@@ -46,7 +46,13 @@ const HedgeOS = {
   applySettings() {
     document.documentElement.setAttribute('data-theme', this.settings.theme);
     const wp = document.getElementById('wallpaper');
-    if (wp) wp.style.background = this.wallpapers[this.settings.wallpaper] || this.wallpapers[0];
+    if (wp) {
+      if (this.settings.customWallpaper) {
+        wp.style.background = 'center / cover no-repeat fixed url("' + this.settings.customWallpaper + '")';
+      } else {
+        wp.style.background = this.wallpapers[this.settings.wallpaper] || this.wallpapers[0];
+      }
+    }
     const sm = document.getElementById('start-user-name');
     if (sm) sm.textContent = this.settings.userName;
   },
