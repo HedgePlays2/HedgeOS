@@ -96,7 +96,11 @@ const CloudDrive = (() => {
     list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim)">Loading files…</div>';
     status('Loading your cloud files…');
     try {
-      await puter.fs.mkdir(ROOT, { createMissingParents: true, dedupeName: false });
+      try {
+        await puter.fs.mkdir(ROOT, { createMissingParents: true, dedupeName: false });
+      } catch (folderError) {
+        // The drive folder already exists; continue loading it.
+      }
       const items = await puter.fs.readdir(currentPath, { sortBy: 'name', sortOrder: 'asc' });
       list.innerHTML = '';
       if (!items.length) {
