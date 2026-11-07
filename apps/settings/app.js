@@ -4,6 +4,7 @@ const Settings = (() => {
     { id: 'desktop',    label: 'Desktop',    icon: '🖥' },
     { id: 'system',     label: 'System',     icon: '⚙' },
     { id: 'apps',       label: 'Apps & Storage', icon: '📦' },
+    { id: 'advanced',   label: 'Advanced',    icon: '🛠️' },
     { id: 'account',    label: 'Account',    icon: '👤' },
     { id: 'about',      label: 'About',      icon: '💻' },
   ];
@@ -23,6 +24,7 @@ const Settings = (() => {
           ${buildDesktop()}
           ${buildSystem()}
           ${buildApps()}
+          ${buildAdvanced()}
           ${buildAccount()}
           ${buildAbout()}
         </div>
@@ -45,6 +47,8 @@ const Settings = (() => {
     initToggles(root);
     initThemePicker(root);
     initWallpaperPicker(root);
+    initCustomWallpaper(root);
+    initAdvancedTools(root);
     initStorageTools(root);
     initAccount(root);
 
@@ -84,6 +88,17 @@ const Settings = (() => {
           <div><label>Wallpaper</label><br><small>Choose a desktop background</small></div>
         </div>
         <div class="wallpaper-grid" style="margin-top:8px">${wallpapers}</div>
+        <div style="margin-top:18px;padding:14px;border:1px solid var(--border);border-radius:10px">
+          <label style="font-weight:700">Your own background</label>
+          <p style="color:var(--text-dim);font-size:12px;line-height:1.5;margin:5px 0 10px">Choose an image from your Chromebook to use as your HedgeOS desktop wallpaper. It is saved on this device.</p>
+          <div id="custom-wallpaper-preview" style="height:110px;border-radius:8px;background:#1e293b center/cover no-repeat;margin-bottom:10px"></div>
+          <input id="custom-wallpaper-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="max-width:100%;font-size:12px">
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn" id="custom-wallpaper-apply" disabled>Use image</button>
+            <button class="btn" id="custom-wallpaper-remove">Remove custom background</button>
+          </div>
+          <small id="custom-wallpaper-status" style="display:block;color:var(--text-dim);margin-top:8px">PNG, JPG, WebP or GIF. Large images are resized to fit.</small>
+        </div>
       </div>`;
   }
 
@@ -155,6 +170,28 @@ const Settings = (() => {
         <p style="color:var(--text-dim);font-size:11px;line-height:1.5;margin-top:12px">
           Persistent storage asks Chrome to protect HedgeOS files from automatic storage cleanup. It does not guarantee unlimited space or replace cloud backups. Windows programs still run in a separate browser runtime; live virtual C: drive syncing is not connected yet.
         </p>
+      </div>`;
+  }
+
+  function buildAdvanced() {
+    return `
+      <div class="settings-section" id="section-advanced">
+        <h2>Advanced</h2>
+        <p style="color:var(--text-dim);font-size:13px;line-height:1.5">Power-user tools for backing up and troubleshooting HedgeOS.</p>
+        <div class="settings-row">
+          <div><label>Export settings</label><br><small>Download a backup of your HedgeOS preferences</small></div>
+          <button class="btn" id="settings-export">Export</button>
+        </div>
+        <div class="settings-row">
+          <div><label>Import settings</label><br><small>Restore preferences from a HedgeOS JSON backup</small></div>
+          <button class="btn" id="settings-import">Import</button>
+          <input type="file" id="settings-import-file" accept="application/json,.json" hidden>
+        </div>
+        <div class="settings-row">
+          <div><label>Storage diagnostics</label><br><small>Check browser storage support and available quota</small></div>
+          <button class="btn" id="settings-advanced-storage">Check</button>
+        </div>
+        <p id="settings-advanced-status" role="status" style="font-size:11px;color:var(--text-dim);margin-top:12px"></p>
       </div>`;
   }
 
@@ -266,6 +303,85 @@ const Settings = (() => {
     });
   }
 
+  function initCustomWallpaper(root) {
+    const picker = root.querySelector('#custom-wallpaper-file');
+    const apply = root.querySelector('#custom-wallpaper-apply');
+    const remove = root.querySelector('#custom-wallpaper-remove');
+    const preview = root.querySelector('#custom-wallpaper-preview');
+    const status = root.querySelector('#custom-wallpaper-status');
+    let preparedImage = '';
+
+    function showCurrent() {
+      const image = HedgeOS.settings.customWallpaper || '';
+      preview.style.backgroundImage = image ? 'url("' + image + '")' : 'none';
+      if (!image) preview.style.background = '#1e293b';
+    }
+    showCurrent();
+
+    picker?.addEventListener('change', () => {
+      const file = picker.files && picker.files[0];
+      preparedImage = '';
+      apply.disabled = true;
+      if (!file) return;
+      if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) {
+        status.textContent = 'Please choose a PNG, JPG, WebP or GIF image.';
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        status.textContent = 'That image is over 15 MB. Choose a smaller image.';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const image = new Image();
+        image.onload = () => {
+          const maxWidth = 1920, maxHeight = 1080;
+          const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          preparedImage = canvas.toDataURL('image/jpeg', 0.78);
+          if (preparedImage.length > 3 * 1024 * 1024) {
+            status.textContent = 'This image is still too large after resizing. Try a smaller image.';
+            preparedImage = '';
+            return;
+          }
+          preview.style.background = '#1e293b center/cover no-repeat';
+          preview.style.backgroundImage = 'url("' + preparedImage + '")';
+          status.textContent = 'Image ready. Select “Use image” to apply it.';
+          apply.disabled = false;
+        };
+        image.onerror = () => { status.textContent = 'Could not read that image.'; };
+        image.src = reader.result;
+      };
+      reader.onerror = () => { status.textContent = 'Could not load that image.'; };
+      reader.readAsDataURL(file);
+    });
+
+    apply?.addEventListener('click', () => {
+      if (!preparedImage) return;
+      HedgeOS.settings.customWallpaper = preparedImage;
+      HedgeOS.settings.wallpaper = -1;
+      HedgeOS.saveSettings();
+      showCurrent();
+      status.textContent = 'Custom background applied and saved on this device.';
+      apply.disabled = true;
+    });
+
+    remove?.addEventListener('click', () => {
+      delete HedgeOS.settings.customWallpaper;
+      HedgeOS.settings.wallpaper = 0;
+      HedgeOS.saveSettings();
+      picker.value = '';
+      preparedImage = '';
+      showCurrent();
+      status.textContent = 'Custom background removed. Default background restored.';
+      apply.disabled = true;
+    });
+  }
+
   function initStorageTools(root) {
     const openInstaller = root.querySelector('#settings-open-installer');
     openInstaller?.addEventListener('click', () => {
@@ -329,6 +445,53 @@ const Settings = (() => {
       }
     });
     refreshStorage();
+  }
+
+  function initAdvancedTools(root) {
+    const status = root.querySelector('#settings-advanced-status');
+    root.querySelector('#settings-export')?.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(HedgeOS.settings, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'hedgeos-settings-backup.json';
+      link.click();
+      URL.revokeObjectURL(url);
+      status.textContent = 'Settings backup exported.';
+    });
+
+    const importButton = root.querySelector('#settings-import');
+    const importPicker = root.querySelector('#settings-import-file');
+    importButton?.addEventListener('click', () => importPicker.click());
+    importPicker?.addEventListener('change', async () => {
+      const file = importPicker.files && importPicker.files[0];
+      if (!file) return;
+      try {
+        if (file.size > 256 * 1024) throw new Error('Settings backup is too large.');
+        const data = JSON.parse(await file.text());
+        const allowed = ['theme', 'wallpaper', 'userName', 'notificationsEnabled', 'clockSeconds'];
+        allowed.forEach(key => {
+          if (Object.prototype.hasOwnProperty.call(data, key)) HedgeOS.settings[key] = data[key];
+        });
+        HedgeOS.saveSettings();
+        status.textContent = 'Settings imported. Reload HedgeOS to refresh every part of the desktop.';
+      } catch (error) {
+        status.textContent = error.message || 'Could not import this settings file.';
+      }
+      importPicker.value = '';
+    });
+
+    root.querySelector('#settings-advanced-storage')?.addEventListener('click', async () => {
+      try {
+        const estimate = navigator.storage?.estimate ? await navigator.storage.estimate() : null;
+        const persisted = navigator.storage?.persisted ? await navigator.storage.persisted() : false;
+        status.textContent = estimate
+          ? 'Storage: ' + ((estimate.usage || 0) / 1048576).toFixed(1) + ' MB used / ' + ((estimate.quota || 0) / 1048576).toFixed(1) + ' MB quota. Persistent: ' + (persisted ? 'yes' : 'no') + '.'
+          : 'Storage diagnostics are not supported in this browser.';
+      } catch (error) {
+        status.textContent = 'Storage diagnostics failed: ' + (error.message || error);
+      }
+    });
   }
 
   function initAccount(root) {
