@@ -3,6 +3,7 @@ const Settings = (() => {
     { id: 'appearance', label: 'Appearance', icon: '🎨' },
     { id: 'desktop',    label: 'Desktop',    icon: '🖥' },
     { id: 'system',     label: 'System',     icon: '⚙' },
+    { id: 'apps',       label: 'Apps & Storage', icon: '📦' },
     { id: 'account',    label: 'Account',    icon: '👤' },
     { id: 'about',      label: 'About',      icon: '💻' },
   ];
@@ -21,6 +22,7 @@ const Settings = (() => {
           ${buildAppearance()}
           ${buildDesktop()}
           ${buildSystem()}
+          ${buildApps()}
           ${buildAccount()}
           ${buildAbout()}
         </div>
@@ -43,6 +45,7 @@ const Settings = (() => {
     initToggles(root);
     initThemePicker(root);
     initWallpaperPicker(root);
+    initStorageTools(root);
     initAccount(root);
 
     return w;
@@ -119,6 +122,39 @@ const Settings = (() => {
           <div><label>Reset Settings</label><br><small>Restore all settings to defaults</small></div>
           <button class="btn danger" id="settings-reset">Reset</button>
         </div>
+      </div>`;
+  }
+
+  function buildApps() {
+    return `
+      <div class="settings-section" id="section-apps">
+        <h2>Apps & Storage</h2>
+        <p style="color:var(--text-dim);font-size:13px;line-height:1.5">
+          Manage HedgeOS app storage and experimental Windows compatibility.
+        </p>
+        <div class="settings-row">
+          <div><label>Windows compatibility</label><br><small>Experimental browser-based 64-bit and 32-bit runtimes</small></div>
+          <span style="font-size:12px;color:var(--text-dim)">Experimental</span>
+        </div>
+        <div class="settings-row">
+          <div><label>App Installer</label><br><small>Import EXE, APK and ZIP backup files</small></div>
+          <button class="btn" id="settings-open-installer">Open</button>
+        </div>
+        <div class="settings-row">
+          <div><label>Local storage</label><br><small id="settings-storage-usage">Checking browser storage…</small></div>
+          <button class="btn" id="settings-storage-refresh">Refresh</button>
+        </div>
+        <div class="settings-row">
+          <div><label>Keep local files available</label><br><small id="settings-storage-persist-status">Checking persistent storage permission…</small></div>
+          <button class="btn" id="settings-storage-persist">Enable</button>
+        </div>
+        <div class="settings-row">
+          <div><label>Cloud backups</label><br><small>Use App Installer to back up files to your signed-in Puter account</small></div>
+          <span style="font-size:12px;color:var(--text-dim)" id="settings-storage-cloud">${typeof Accounts !== 'undefined' && Accounts.getUser() ? '☁ Signed in' : 'Not signed in'}</span>
+        </div>
+        <p style="color:var(--text-dim);font-size:11px;line-height:1.5;margin-top:12px">
+          Persistent storage asks Chrome to protect HedgeOS files from automatic storage cleanup. It does not guarantee unlimited space or replace cloud backups. Windows programs still run in a separate browser runtime; live virtual C: drive syncing is not connected yet.
+        </p>
       </div>`;
   }
 
@@ -228,6 +264,71 @@ const Settings = (() => {
         HedgeOS.saveSettings();
       }, 500);
     });
+  }
+
+  function initStorageTools(root) {
+    const openInstaller = root.querySelector('#settings-open-installer');
+    openInstaller?.addEventListener('click', () => {
+      if (typeof AppInstaller !== 'undefined') AppInstaller.open();
+      else Notifications.show('App Installer', 'The App Installer is not available.', '⚠️');
+    });
+
+    const usage = root.querySelector('#settings-storage-usage');
+    const persistStatus = root.querySelector('#settings-storage-persist-status');
+    const persistButton = root.querySelector('#settings-storage-persist');
+
+    async function refreshStorage() {
+      if (usage) usage.textContent = 'Checking browser storage…';
+      try {
+        if (navigator.storage && navigator.storage.estimate) {
+          const estimate = await navigator.storage.estimate();
+          const used = estimate.usage || 0;
+          const quota = estimate.quota || 0;
+          const format = bytes => bytes < 1048576 ? (bytes / 1024).toFixed(1) + ' KB' : (bytes / 1048576).toFixed(1) + ' MB';
+          usage.textContent = format(used) + ' used of ' + (quota ? format(quota) : 'unknown quota');
+        } else if (usage) {
+          usage.textContent = 'Storage estimates are not supported by this browser.';
+        }
+      } catch (error) {
+        if (usage) usage.textContent = 'Could not read storage usage.';
+      }
+      try {
+        if (navigator.storage && navigator.storage.persisted) {
+          const persistent = await navigator.storage.persisted();
+          if (persistStatus) persistStatus.textContent = persistent ? 'Persistent storage is enabled' : 'Browser may clear site data when space is low';
+          if (persistButton) {
+            persistButton.textContent = persistent ? 'Enabled' : 'Enable';
+            persistButton.disabled = persistent;
+          }
+        } else if (persistStatus) {
+          persistStatus.textContent = 'Persistent storage is not supported here.';
+          if (persistButton) persistButton.disabled = true;
+        }
+      } catch (error) {
+        if (persistStatus) persistStatus.textContent = 'Could not check storage permission.';
+      }
+    }
+
+    root.querySelector('#settings-storage-refresh')?.addEventListener('click', refreshStorage);
+    persistButton?.addEventListener('click', async () => {
+      if (!navigator.storage || !navigator.storage.persist) {
+        if (persistStatus) persistStatus.textContent = 'Persistent storage is not supported here.';
+        return;
+      }
+      persistButton.disabled = true;
+      persistButton.textContent = 'Requesting…';
+      try {
+        const granted = await navigator.storage.persist();
+        if (persistStatus) persistStatus.textContent = granted ? 'Persistent storage is enabled' : 'Chrome did not grant persistent storage. Keep cloud backups.';
+        persistButton.textContent = granted ? 'Enabled' : 'Try again';
+        persistButton.disabled = granted;
+      } catch (error) {
+        if (persistStatus) persistStatus.textContent = 'Could not request persistent storage.';
+        persistButton.textContent = 'Try again';
+        persistButton.disabled = false;
+      }
+    });
+    refreshStorage();
   }
 
   function initAccount(root) {
