@@ -12,6 +12,7 @@ const HedgeOS = {
 
   apps: [
     { id: 'files',    name: 'File Manager', icon: '📁', launch: () => FileExplorer.open() },
+    { id: 'cloud',    name: 'Cloud Drive', icon: '☁️', launch: () => CloudDrive.open() },
     { id: 'terminal', name: 'Terminal',      icon: '⌨',  launch: () => Terminal.open() },
     { id: 'browser',  name: 'Browser',       icon: '🌐', launch: () => OSBrowser.open() },
     { id: 'store',    name: 'Play Store',     icon: '🛍️', launch: () => PlayStore.open() },
