@@ -10,9 +10,8 @@ const Taskbar = (() => {
       StartMenu.toggle();
     });
 
-    document.getElementById('tray-notif').addEventListener('click', () => {
-      Notifications.show('HedgeOS', 'No new notifications.', '🔔');
-    });
+    document.getElementById('tray-notif').setAttribute('aria-label', 'Open notifications');
+    document.getElementById('tray-wifi').setAttribute('aria-label', 'Open Quick Settings');
   }
 
   function updateClock() {
