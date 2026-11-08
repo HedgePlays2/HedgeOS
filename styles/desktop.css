@@ -565,3 +565,26 @@ body.night-light::after {
   #quick-settings { right: 8px; bottom: calc(var(--taskbar-h) + 8px); padding: 14px; }
   .qs-tile { min-height: 60px; padding: 9px; }
 }
+
+.qs-notification-card {
+  display: flex;
+  gap: 10px;
+  padding: 11px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 11px;
+  background: rgba(255,255,255,0.065);
+}
+.qs-history-icon { font-size: 20px; }
+.qs-notification-card strong { display: block; font-size: 12px; }
+.qs-notification-card p { margin-top: 4px; color: #c0cada; font-size: 11px; line-height: 1.4; }
+.qs-notification-card small { display: block; margin-top: 6px; color: #8794a8; font-size: 10px; }
+.qs-tile:hover, .qs-close:hover, #qs-clear:hover, #qs-settings:hover { filter: brightness(1.15); }
+.qs-tile:focus-visible, .qs-close:focus-visible, #qs-clear:focus-visible, #qs-settings:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+[data-color-mode="light"] .qs-notification-card { background: rgba(15,23,42,0.045); border-color: rgba(15,23,42,0.09); }
+[data-color-mode="light"] .qs-notification-card p { color: #475569; }
+[data-color-mode="light"] .qs-notification-card small { color: #64748b; }
+#clock-display { cursor: pointer; }
