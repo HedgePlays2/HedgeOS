@@ -80,6 +80,7 @@ function startDesktop() {
 
   Desktop.init();
   Taskbar.init();
+  QuickSettings.init();
   StartMenu.init();
   Notifications.init();
 
