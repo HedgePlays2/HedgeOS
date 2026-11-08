@@ -16,13 +16,12 @@ const QuickSettings = (() => {
     });
     panel.querySelector('#qs-brightness').addEventListener('input', e => setBrightness(e.target.value));
     panel.querySelector('#qs-volume').addEventListener('input', e => setVolume(e.target.value));
-    panel.querySelector('#qs-settings').addEventListener('click', () => {
+    panel.querySelectorAll('#qs-settings').forEach(button => button.addEventListener('click', () => {
       close();
       Settings.open();
-    });
+    }));
     panel.querySelector('#qs-clear').addEventListener('click', () => {
-      panel.querySelector('#qs-notifications').innerHTML =
-        '<div class="qs-empty">You’re all caught up. No notifications.</div>';
+      Notifications.clearHistory();
     });
 
     document.addEventListener('click', e => {
