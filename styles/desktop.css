@@ -419,6 +419,7 @@ body {
   flex-shrink: 0;
 }
 #start-all-apps:hover { background: var(--glass-light); }
+#start-all-apps[hidden] { display: none !important; }
 #start-all-apps span { font-size: 18px; }
 #start-all-section { overflow-y: auto; }
 #start-all-section[hidden], .start-section[hidden] { display: none !important; }
