@@ -347,6 +347,7 @@ body {
   gap: 5px;
 }
 .start-pinned-app {
+  width: 100%;
   min-width: 0;
   min-height: 76px;
   position: relative;
@@ -372,6 +373,8 @@ body {
   max-width: 100%;
 }
 .start-app-list { display: flex; flex-direction: column; gap: 2px; }
+.start-app-row { display: flex; align-items: center; gap: 4px; }
+.start-app-row .start-app { flex: 1; min-width: 0; }
 .start-app {
   width: 100%;
   display: flex;
