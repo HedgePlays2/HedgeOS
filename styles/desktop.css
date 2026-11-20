@@ -281,35 +281,41 @@ body {
 /* ── START MENU ── */
 #start-menu {
   position: absolute;
-  bottom: var(--taskbar-h);
-  left: 0;
-  width: 280px;
+  bottom: calc(var(--taskbar-h) + 8px);
+  left: 8px;
+  width: min(360px, calc(100vw - 16px));
+  max-height: min(76vh, 680px);
   background: var(--glass);
   backdrop-filter: blur(32px);
   border: 1px solid var(--border);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border-radius: var(--radius);
   z-index: 2000;
   overflow: hidden;
   box-shadow: var(--shadow);
   animation: slideUp 0.15s ease;
+  display: flex;
+  flex-direction: column;
 }
 #start-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 #start-user-avatar {
   font-size: 28px;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background: var(--accent);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-}\n#start-user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+  overflow: hidden;
+}
+#start-user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
 #start-user-name { font-size: 14px; color: var(--text); font-weight: 500; }
 #start-search {
   display: block;
@@ -318,39 +324,107 @@ body {
   background: rgba(255,255,255,0.08);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 9px 12px;
   color: var(--text);
   font-size: 13px;
   outline: none;
+  flex-shrink: 0;
 }
 #start-search:focus { border-color: var(--accent); }
 #start-search::placeholder { color: var(--text-dim); }
-#start-apps {
-  padding: 4px 8px;
-  max-height: 340px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--dark3) transparent;
+.start-section { padding: 4px 12px 10px; min-height: 0; }
+.start-section-heading {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 7px 4px;
 }
+#start-pinned {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.start-pinned-app {
+  min-width: 0;
+  min-height: 76px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 4px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+}
+.start-pinned-app:hover, .start-app:hover { background: var(--glass-light); }
+.start-pinned-app .app-icon { font-size: 25px; line-height: 1; }
+.start-pinned-app .app-name {
+  font-size: 10px;
+  text-align: center;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.start-app-list { display: flex; flex-direction: column; gap: 2px; }
 .start-app {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px;
+  padding: 9px 10px;
+  border: 0;
   border-radius: 8px;
+  background: transparent;
   cursor: pointer;
   color: var(--text);
-  transition: background 0.15s;
+  text-align: left;
+  font: inherit;
 }
-.start-app:hover { background: var(--glass-light); }
-.start-app .app-icon { font-size: 22px; width: 32px; text-align: center; }
-.start-app .app-name { font-size: 13px; }
-
+.start-app .app-icon { font-size: 21px; width: 30px; text-align: center; flex-shrink: 0; }
+.start-app .app-name { font-size: 12px; flex: 1; }
+.start-pin-toggle {
+  color: var(--text-dim);
+  border: 0;
+  background: transparent;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+.start-pin-toggle:hover { color: var(--text); background: rgba(255,255,255,.08); }
+.start-empty { padding: 12px 8px; color: var(--text-dim); font-size: 11px; text-align: center; }
+#start-all-apps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(100% - 24px);
+  margin: 2px 12px 10px;
+  padding: 9px 11px;
+  color: var(--text);
+  background: rgba(255,255,255,.055);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+#start-all-apps:hover { background: var(--glass-light); }
+#start-all-apps span { font-size: 18px; }
+#start-all-section { overflow-y: auto; }
+#start-all-section[hidden], .start-section[hidden] { display: none !important; }
 #start-footer {
   display: flex;
   gap: 4px;
   padding: 8px;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 .start-foot-btn {
   flex: 1;
