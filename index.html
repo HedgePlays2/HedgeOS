@@ -82,7 +82,19 @@
       <div id="start-user-name">HedgeOS User</div>
     </div>
     <input id="start-search" placeholder="Search apps..." autocomplete="off">
-    <div id="start-apps"></div>
+    <section class="start-section" id="start-pinned-section">
+      <div class="start-section-heading">Pinned</div>
+      <div id="start-pinned"></div>
+    </section>
+    <section class="start-section" id="start-recent-section">
+      <div class="start-section-heading">Recently opened</div>
+      <div id="start-recent"></div>
+    </section>
+    <button id="start-all-apps" type="button">All apps <span>›</span></button>
+    <section class="start-section" id="start-all-section" hidden>
+      <div class="start-section-heading" id="start-list-heading">All apps</div>
+      <div id="start-apps"></div>
+    </section>
     <div id="start-footer">
       <div class="start-foot-btn" data-action="settings" title="Settings">⚙</div>
       <div class="start-foot-btn" data-action="power" title="Power">⏻</div>
