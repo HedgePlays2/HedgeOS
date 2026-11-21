@@ -1278,6 +1278,17 @@
         function navigate(raw) {
           const url = toUrl(raw)
           if (!url) return
+
+          // Scramjet cannot proxy its own origin. This also prevents HedgeOS
+          // from recursively loading itself inside the browser window.
+          if (new URL(url).origin === location.origin) {
+            status.style.color = '#fbbf24'
+            status.textContent = 'That address is hosted on HedgeOS’s own origin and cannot be proxied by this Scramjet instance.'
+            return
+          }
+
+          status.style.color = ''
+          status.textContent = 'Ready'
           showBrowser(sj.encodeUrl(url))
         }
 
