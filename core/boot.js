@@ -82,6 +82,7 @@ function startDesktop() {
   Taskbar.init();
   QuickSettings.init();
   StartMenu.init();
+  Widgets.init();
   Notifications.init();
 
   HedgeOS.applySettings();
