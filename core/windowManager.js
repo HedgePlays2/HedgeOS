@@ -146,12 +146,15 @@ const WindowManager = (() => {
     if (!win) return;
 
     if (!win.maximized) {
-      win.prevRect = {
-        left: win.el.style.left,
-        top: win.el.style.top,
-        width: win.el.style.width,
-        height: win.el.style.height
-      };
+      if (!win.snapped) {
+        win.prevRect = {
+          left: win.el.style.left,
+          top: win.el.style.top,
+          width: win.el.style.width,
+          height: win.el.style.height
+        };
+      }
+      win.snapped = null;
       win.maximized = true;
       win.el.classList.add('maximized');
       win.el.querySelector('.win-max').textContent = '❐';
