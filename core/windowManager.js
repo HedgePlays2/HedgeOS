@@ -213,7 +213,12 @@ const WindowManager = (() => {
     handle.addEventListener('pointerdown', event => {
       if (event.target.closest('.win-btn') || state.maximized) return;
       if (event.pointerType === 'mouse' && event.button !== 0) return;
-
+      if (state.snapped) {
+        state.snapped = null;
+        if (state.prevRect) Object.assign(el.style, state.prevRect);
+        el.style.left = Math.max(0, event.clientX - el.offsetWidth / 2) + 'px';
+        el.style.top = Math.max(0, event.clientY - 18) + 'px';
+      }
       pointerId = event.pointerId;
       offsetX = event.clientX - el.offsetLeft;
       offsetY = event.clientY - el.offsetTop;
@@ -233,12 +238,38 @@ const WindowManager = (() => {
     const stopDragging = event => {
       if (pointerId !== event.pointerId) return;
       pointerId = null;
+      const x = event.clientX, y = event.clientY;
+      if (y <= 12) {
+        maximize(state.id);
+      } else if (x <= 12) {
+        snap(state.id, 'left');
+      } else if (x >= window.innerWidth - 12) {
+        snap(state.id, 'right');
+      }
     };
     handle.addEventListener('pointerup', stopDragging);
     handle.addEventListener('pointercancel', stopDragging);
     handle.addEventListener('dblclick', event => {
       if (!event.target.closest('.win-btn')) maximize(state.id);
     });
+  }
+
+  function snap(id, side) {
+    const win = wins.get(id);
+    if (!win) return;
+    if (!win.prevRect || (!win.maximized && !win.snapped)) {
+      win.prevRect = { left: win.el.style.left, top: win.el.style.top, width: win.el.style.width, height: win.el.style.height };
+    }
+    win.maximized = false;
+    win.snapped = side;
+    win.el.classList.remove('maximized');
+    win.el.style.left = side === 'left' ? '0px' : Math.floor(window.innerWidth / 2) + 'px';
+    win.el.style.top = '0px';
+    win.el.style.width = Math.floor(window.innerWidth / 2) + 'px';
+    win.el.style.height = Math.max(MIN_HEIGHT, window.innerHeight - TASKBAR_HEIGHT) + 'px';
+    win.el.querySelector('.win-max').textContent = '□';
+    win.el.querySelector('.win-max').title = 'Maximize';
+    focus(id);
   }
 
   function makeResizable(el, handle, state) {
