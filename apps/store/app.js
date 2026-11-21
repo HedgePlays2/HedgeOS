@@ -3,7 +3,6 @@ const PlayStore = (() => {
 
   const catalog = [
     { id: 'hedge-arcade', name: 'Hedge Web Arcade', icon: '🎮', category: 'Games', description: 'A collection of browser games, including Sonic adventures.', url: 'https://hedgeplays2.github.io/' },
-    { id: 'scramjet-proxy', name: 'Scramjet Proxy', icon: '🚀', category: 'Apps', description: 'Open the Scramjet web proxy site by MercuryWorkshop.', url: 'https://scramjet.mercurywork.shop/' },
     { id: 'scratch', name: 'Scratch', icon: '🐱', category: 'Apps', description: 'Create games, animations and interactive stories.', url: 'https://scratch.mit.edu/' },
     { id: 'itch-io', name: 'itch.io', icon: '🕹️', category: 'Games', description: 'Discover indie games you can play in your browser.', url: 'https://itch.io/games/html5' },
     { id: 'steam', name: 'Steam Store', icon: '🎮', category: 'Games', description: 'Browse PC games on Valve’s official Steam store website.', url: 'https://store.steampowered.com/' },
