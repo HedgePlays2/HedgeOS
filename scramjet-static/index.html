@@ -979,12 +979,20 @@
         cancelReload()
       }
 
-      function showBrowser(encodedUrl) {
+      function showBrowser(targetUrl, direct = false) {
         startLoadBar()
+        // Same-origin pages (such as Hedge Web Arcade) must load directly,
+        // not through Scramjet. Keep them isolated from the HedgeOS parent.
+        frame.setAttribute(
+          'sandbox',
+          direct
+            ? 'allow-scripts allow-forms allow-popups allow-modals allow-downloads'
+            : 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads'
+        )
         if (!browsing) {
-          frame.contentWindow.location.replace(encodedUrl)
+          frame.contentWindow.location.replace(targetUrl)
         } else {
-          frame.src = encodedUrl
+          frame.src = targetUrl
         }
         home.classList.add('hidden')
         frame.classList.add('visible')
@@ -1279,17 +1287,13 @@
           const url = toUrl(raw)
           if (!url) return
 
-          // Scramjet cannot proxy its own origin. This also prevents HedgeOS
-          // from recursively loading itself inside the browser window.
-          if (new URL(url).origin === location.origin) {
-            status.style.color = '#fbbf24'
-            status.textContent = 'That address is hosted on HedgeOS’s own origin and cannot be proxied by this Scramjet instance.'
-            return
-          }
+          // Scramjet cannot proxy its own origin. Load same-origin pages
+          // directly in an isolated sandbox instead (e.g. Hedge Web Arcade).
+          const direct = new URL(url).origin === location.origin
 
           status.style.color = ''
-          status.textContent = 'Ready'
-          showBrowser(sj.encodeUrl(url))
+          status.textContent = direct ? 'Opening same-origin page…' : 'Ready'
+          showBrowser(direct ? url : sj.encodeUrl(url), direct)
         }
 
         document.getElementById('go-btn').addEventListener('click', () => navigate(bar.value))
