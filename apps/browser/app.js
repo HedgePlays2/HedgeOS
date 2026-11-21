@@ -1,5 +1,5 @@
 const OSBrowser = (() => {
-  const SCRAMJET_HOME = new URL('scramjet-static/index.html', document.baseURI).href;
+  const SCRAMJET_HOME = 'https://scramjet.mercurywork.shop/';
 
   function open(url = '', pageTitle = 'Scramjet Browser') {
     const target = String(url || '');
@@ -15,14 +15,14 @@ const OSBrowser = (() => {
           <span style="font-size:11px;color:#9ca3af;">HedgeOS Browser</span>
           <span style="flex:1;"></span>
           <button id="br-reload" title="Reload page" style="border:0;border-radius:6px;padding:6px 10px;background:#374151;color:white;cursor:pointer;">↻</button>
-          <button id="br-home" title="Open Scramjet home" style="border:0;border-radius:6px;padding:6px 10px;background:#374151;color:white;cursor:pointer;">Home</button>
+          <button id="br-home" title="Open Scramjet proxy home" style="border:0;border-radius:6px;padding:6px 10px;background:#374151;color:white;cursor:pointer;">Home</button>
           <button id="br-open" style="border:0;border-radius:6px;padding:6px 10px;background:#2563eb;color:white;cursor:pointer;">Open separately ↗</button>
         </div>
         <div style="flex:1;min-height:0;position:relative;background:#fff;">
           <iframe id="br-frame" title="HedgeOS Browser content" src="${browserUrl}" style="display:block;width:100%;height:100%;border:0;background:white;"></iframe>
         </div>
         <div style="padding:5px 10px;background:#1f2937;color:#9ca3af;font-size:10px;flex:0 0 auto;">
-          Powered by Scramjet STATIC. Proxy availability depends on its WISP server.
+          Using Scramjet at scramjet.mercurywork.shop. Some sites may block embedding; use Open separately if needed.
         </div>
       </div>`;
 
