@@ -137,17 +137,9 @@ body {
 }
 
 /* ── DESKTOP ICONS ── */
-#desktop-icons {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  gap: 8px;
-  max-height: calc(100vh - 80px);
-  z-index: 10;
-}
+#desktop-icons { position:absolute; inset:0 0 76px 0; z-index:10; pointer-events:none; }
+.desktop-icon { position:absolute; pointer-events:auto; touch-action:none; }
+.desktop-icon.dragging { z-index:30; background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.22); }
 .desktop-icon {
   width: 80px;
   display: flex;
@@ -706,3 +698,5 @@ body.night-light::after {
 .win-close:hover{background:#ef4444;color:white}
 #power-menu{bottom:calc(var(--taskbar-h) + 18px);left:10px;border-radius:14px}
 @media(max-width:620px){:root{--taskbar-h:54px}#taskbar{left:5px;width:calc(100% - 10px);bottom:5px;padding:0 7px;gap:5px}#taskbar-windows{width:calc(100% - 150px)}.taskbar-btn{max-width:88px;padding:5px 7px;font-size:10px}#widgets-btn{display:none}#tray-notif{display:none}#clock-display{font-size:10px}}
+
+.ctx-item{display:flex;align-items:center;min-height:34px;padding:8px 14px;border-radius:6px;margin:2px 5px}.ctx-item:hover{background:rgba(255,255,255,.12)}#context-menu{min-width:205px;border-radius:12px;padding:5px}
